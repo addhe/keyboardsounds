@@ -28,6 +28,7 @@ setup(
             "profiles/ios/*",
             "profiles/mx-black/*",
             "profiles/mx-blue/*",
+            "profiles/mx-blue-sprite/*",
             "profiles/mx-brown/*",
             "profiles/mx-brown-sprite/*",
             "profiles/mx-speed-silver/*",
