@@ -29,6 +29,7 @@ setup(
             "profiles/mx-black/*",
             "profiles/mx-blue/*",
             "profiles/mx-brown/*",
+            "profiles/mx-brown-sprite/*",
             "profiles/mx-speed-silver/*",
             "profiles/nk-cream/*",
             "profiles/opera-gx/*",

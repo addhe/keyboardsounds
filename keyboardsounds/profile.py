@@ -1,4 +1,5 @@
 import os
+import json
 import yaml
 import zipfile
 import shutil
@@ -58,6 +59,23 @@ class Profile(PathResolver):
 
         if not os.path.isdir(self.root):
             raise ValueError(f"Profile '{self.name}' does not exist")
+
+        # Check for audio-sprite profile
+        if os.path.isfile(self.get_child("config.json").get_path()):
+            with open(self.get_child("config.json").get_path(), "r") as f:
+                data = json.load(f)
+                self.__data = {
+                    "profile": {
+                        "type": "audio-sprite",
+                        "name": data.get("name", self.name),
+                        "author": data.get("author", "Unknown"),
+                        "description": data.get("description", "Audio-sprite profile"),
+                        "device": data.get("device", "keyboard"),
+                    },
+                    "sprite_config": data,
+                }
+            return
+
         if not os.path.isfile(self.get_child("profile.yaml").get_path()):
             raise ValueError(
                 f"Profile '{self.name}' is corrupted. Missing profile.yaml."

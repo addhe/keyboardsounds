@@ -128,6 +128,21 @@ class AudioManager:
                     source_id = cast(str, source["id"])
                     path = self.profile.get_child(src).get_path()
                     self.__extract(source_id, path)
+        elif self.profile.value("profile.type") == "audio-sprite":
+            config = self.profile.value("sprite_config")
+            sound_path = self.profile.get_child(config["sound"]).get_path()
+            ffmpeg_exe = get_ffmpeg_exe()
+            WAV_FILE = f"{sound_path}.wav"
+            subprocess.run(
+                [ffmpeg_exe, "-y", "-i", sound_path, "-f", "wav", "-vn", WAV_FILE],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            for key, value in config["defines"].items():
+                start = value[0] / 1000.0
+                end = start + (value[1] / 1000.0)
+                self.__extract(key, WAV_FILE, start, end)
+            os.unlink(WAV_FILE)
 
     def __extract(self, id, input, start: float = 0.0, end: Optional[float] = None):
         """
@@ -147,7 +162,7 @@ class AudioManager:
         segment and storing it in memory for quick access. The extracted audio
         clip is associated with the provided id.
         """
-        if input.endswith(("mp3", "MP3")):
+        if input.endswith(("mp3", "MP3", "ogg", "OGG")):
             source = open(input, "rb")
             data = source.read()
             source.close()
@@ -188,6 +203,15 @@ class AudioManager:
         """
         if not self.__enabled:
             return None
+
+        if self.profile.value("profile.type") == "audio-sprite":
+            if action == "release": # audio-sprite profiles don't have release sounds
+                return None
+            try:
+                vk = key.vk
+            except AttributeError:
+                vk = key.value.vk
+            return self.__get_sound(str(vk), action)
 
         # Device-aware mapping
         device = cast(Optional[str], self.profile.value("profile.device")) or "keyboard"
@@ -254,7 +278,10 @@ class AudioManager:
         if type(key) is list:
             return self.__parse_sound(self.sounds[random.choice(key)], action)
         key_str = cast(str, key)
-        return self.__parse_sound(self.sounds[key_str], action)
+        try:
+            return self.__parse_sound(self.sounds[key_str], action)
+        except KeyError:
+            return None
 
     def __get_mouse_sound(self, btn, action: str = "press") -> Optional[io.BytesIO]:
         # btn is expected to be pynput.mouse.Button
